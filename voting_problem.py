@@ -32,7 +32,8 @@ def kemeny_ranking(voters):
 
     # For each possible pair (head-to-head matchup), determine which is preferred by each voter and tally up the results
     for pair in itertools.permutations(candidates, 2):
-        results[pair] = 0
+        if pair[0] not in results.keys():
+            results[pair] = 0
         # print(pair)
 
         for voter in voters:
@@ -76,7 +77,7 @@ def bucklin_ranking(voters):
                     if candidate in [cand for cand, ranking in voter.get_ranking_order()[:k]]:
                         count += 1 * voter.weight
 
-                if count >= 3:
+                if count >= 3:  # 3 is the majority of voters
                     results.append(candidate)
                     found_candidate_this_iteration = True
                     break
@@ -93,13 +94,16 @@ def second_order_copeland_ranking(voters):
     copeland_order = copeland_ranking(voters)
     results = {}
 
-    for pair in itertools.permutations(voters, 2):
-        results[pair[0]] = 0
+    for pair in itertools.permutations(candidates, 2):
+        if pair[0] not in results.keys():
+            results[pair[0]] = 0
         # for candidate in candidates:
         for voter in voters:
             if voter.votes[pair[0]] < voter.votes[pair[1]]:
+                # Second order Copeland takes the Copeland score of defeated candidates
                 results[pair[0]] += copeland_order[pair[1]] * voter.weight
 
+    return list(sorted(results, key=lambda x: x[1], reverse=True))
 
 
 def copeland_ranking(voters):
@@ -112,12 +116,16 @@ def copeland_ranking(voters):
         for voter in voters:
             # Remember, lower ranking number means more preferred candidate
             if voter.votes[pair[0]] < voter.votes[pair[1]]:
-                victories_and_defeats[pair[0]][0] += 1
+                victories_and_defeats[pair[0]][0] += 1 * voter.weight
             elif voter.votes[pair[0]] > voter.votes[pair[1]]:
-                victories_and_defeats[pair[0]][1] += 1
+                victories_and_defeats[pair[0]][1] += 1 * voter.weight
 
-    copeland_order = {cand: score[0] - score[1] for cand, score in
-                      sorted(victories_and_defeats.items(), key=lambda x: x[1][0] - x[1][1], reverse=True)}
+    # This gives the Copeland score as per Wikipedia (https://en.wikipedia.org/wiki/Copeland%27s_method), but this
+    # disagrees with lecture, which does NOT have us subtract the number of defeats from the number of victories
+    # copeland_order = {cand: score[0] - score[1] for cand, score in
+    #                   sorted(victories_and_defeats.items(), key=lambda x: x[1][0] - x[1][1], reverse=True)}
+    copeland_order = {cand: score[0] for cand, score in
+                      sorted(victories_and_defeats.items(), key=lambda x: x[1][0], reverse=True)}
 
     return copeland_order
 
@@ -130,6 +138,7 @@ if __name__ == "__main__":
     buck = bucklin_ranking(voters)
     print(buck)
 
-    cope = copeland_ranking(voters)
-    print(cope)
-
+    # cope = copeland_ranking(voters)
+    # print(cope)
+    sec_cope = second_order_copeland_ranking(voters)
+    print(sec_cope)
