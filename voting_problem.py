@@ -59,9 +59,6 @@ def kemeny_ranking(voters):
             if order.index(pair[0]) < order.index(pair[1]):
                 order_scores[order] += votes
 
-    # for order, score in sorted(order_scores.items(), key=lambda x: x[1], reverse=True):
-    #     print(f"{order}: {score}")
-
     # Settle ties by just returning the first result
     return list(sorted(order_scores.items(), key=lambda x: x[1], reverse=True))[0]
 
@@ -99,7 +96,6 @@ def second_order_copeland_ranking(voters):
     for pair in itertools.permutations(candidates, 2):
         if pair[0] not in results.keys():
             results[pair[0]] = 0
-        # for candidate in candidates:
         for voter in voters:
             if voter.votes[pair[0]] < voter.votes[pair[1]]:
                 # Second order Copeland takes the Copeland score of defeated candidates
@@ -122,10 +118,9 @@ def copeland_ranking(voters):
             elif voter.votes[pair[0]] > voter.votes[pair[1]]:
                 victories_and_defeats[pair[0]][1] += 1 * voter.weight
 
-    # This gives the Copeland score as per Wikipedia (https://en.wikipedia.org/wiki/Copeland%27s_method), but this
-    # disagrees with lecture, which does NOT have us subtract the number of defeats from the number of victories
-    # copeland_order = {cand: score[0] - score[1] for cand, score in
-    #                   sorted(victories_and_defeats.items(), key=lambda x: x[1][0] - x[1][1], reverse=True)}
+    # Wikipedia says that the Copeland score (https://en.wikipedia.org/wiki/Copeland%27s_method) should subtract the
+    # candidate's defeats from its victories, but this disagrees with lecture, which does NOT have us subtract the
+    # number of defeats from the number of victories.  I implemented the version from lecture
     copeland_order = {cand: score[0] for cand, score in
                       sorted(victories_and_defeats.items(), key=lambda x: x[1][0], reverse=True)}
 
@@ -134,7 +129,10 @@ def copeland_ranking(voters):
 
 def create_random_voters(num_voters=4, max_weight=10):
     voters = []
-    letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'  # Used for picking a voter name
+
+    # Used for picking a voter name.  If user wants more than 26 voters, names are repeated.  Oh well.
+    letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
     for voter_idx in range(num_voters):
         name = letters[voter_idx]
         weight = random.uniform(0, max_weight)
@@ -155,9 +153,12 @@ def print_votes(voters):
 
 
 if __name__ == "__main__":
-    # voters = create_voters()
-    voters = create_random_voters(num_voters=9, max_weight=10)
-    # print(voters)
+    # To use the voters in the `voter_weights.csv` file, use this line
+    voters = create_voters()
+
+    # To use the randomly generated voters, comment out the previous line and use this line instead
+    # voters = create_random_voters(num_voters=9, max_weight=10)
+
     print_votes(voters)
     kem = kemeny_ranking(voters)
 
@@ -167,7 +168,5 @@ if __name__ == "__main__":
     buck = bucklin_ranking(voters)
     print(f"Bucklin: \t\t\t{buck}")
 
-    # cope = copeland_ranking(voters)
-    # print(cope)
     sec_cope = second_order_copeland_ranking(voters)
     print(f"2nd order Copeland: {sec_cope}")
