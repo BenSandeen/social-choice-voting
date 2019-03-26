@@ -20,3 +20,6 @@ class Voter:
         return f"Name: {self.name},\tweight: {self.weight},\tAlex: {self.Alex},\tBart: {self.Bart}," \
             f"\tCindy: {self.Cindy},\tDavid: {self.David},\tErik: {self.Erik},\tFrank: {self.Frank}," \
             f"\tGreg: {self.Greg}\n"
+
+    def __lt__(self, other):
+        return self.name < other.name

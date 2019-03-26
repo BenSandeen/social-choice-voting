@@ -1,6 +1,8 @@
 import voter_agent
 import csv
 import itertools
+import random
+import math
 
 
 # Read this in from file if there's time
@@ -77,7 +79,7 @@ def bucklin_ranking(voters):
                     if candidate in [cand for cand, ranking in voter.get_ranking_order()[:k]]:
                         count += 1 * voter.weight
 
-                if count >= 3:  # 3 is the majority of voters
+                if count >= math.ceil((len(voters) + 1) / 2):  # This gets the majority of voters
                     results.append(candidate)
                     found_candidate_this_iteration = True
                     break
@@ -107,7 +109,7 @@ def second_order_copeland_ranking(voters):
 
 
 def copeland_ranking(voters):
-    """Helper method for getting hte Copeland scores"""
+    """Helper method for getting the Copeland scores"""
     # Candidates are the keys and the values are 2-element lists with wins first and losses second
     victories_and_defeats = {}
     for pair in itertools.permutations(candidates, 2):
@@ -129,16 +131,43 @@ def copeland_ranking(voters):
 
     return copeland_order
 
+
+def create_random_voters(num_voters=4, max_weight=10):
+    voters = []
+    letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'  # Used for picking a voter name
+    for voter_idx in range(num_voters):
+        name = letters[voter_idx]
+        weight = random.uniform(0, max_weight)
+        votes = random.sample(range(1, 8), 7)  # Gets random order of preference for candidates
+
+        voter = voter_agent.Voter(name, weight, votes)
+        voters.append(voter)
+
+    return voters
+
+
+def print_votes(voters):
+    print("VOTES ARE AS FOLLOWS")
+    for voter in sorted(voters):  # Sort them so they appear alphabetically
+        print(voter, end='')
+
+    print()
+
+
 if __name__ == "__main__":
-    voters = create_voters()
-    print(voters)
+    # voters = create_voters()
+    voters = create_random_voters(num_voters=9, max_weight=10)
+    # print(voters)
+    print_votes(voters)
     kem = kemeny_ranking(voters)
-    print(kem)
+
+    print("Results:\t\t\t\t 1 \t\t 2 \t\t 3 \t\t 4 \t\t 5 \t\t 6 \t\t 7")
+    print(f"Kemeny: \t\t\t{kem[0]}")
 
     buck = bucklin_ranking(voters)
-    print(buck)
+    print(f"Bucklin: \t\t\t{buck}")
 
     # cope = copeland_ranking(voters)
     # print(cope)
     sec_cope = second_order_copeland_ranking(voters)
-    print(sec_cope)
+    print(f"2nd order Copeland: {sec_cope}")
